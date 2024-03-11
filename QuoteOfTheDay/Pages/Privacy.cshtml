@@ -1,0 +1,18 @@
+﻿@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Privacy Policy";
+    ViewData["Username"] = User.Identity.Name;
+
+}
+<h1>@ViewData["Title"]</h1>
+
+<p>
+    This application is to demonstrate the configuration, feature management, and experimentation capabilities of Azure App Configuration. 
+    It collects and stores telemetry of login users and their votes for the quotes.
+</p>
+
+<p>
+    The authentication is based off of parameters passed in via the request's query string parameters.
+    No secret exchange/verification is performed, so no sensitive information should be used with this demo application.
+</p>

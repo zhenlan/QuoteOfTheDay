@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quote Of The Day</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/QuoteOfTheDay.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index" asp-all-route-data="@Context.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString())">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Refresh">Refresh</a>
+                        </li>
+                    </ul>
+                    <span id="Username" class="text-right" style="text-decoration:underline">@ViewData["Username"]</span>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            @if (string.IsNullOrEmpty(ViewData["Username"] as string))
+                            {
+                                <a class="nav-link text-dark" asp-area="" onclick="showUsernameInput()">Login</a>
+                            }
+                            else
+                            {
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Logout</a>
+                            }
+                        </li>
+                    </ul>
+                </div>
+           </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - QuoteOfTheDay - <a asp-area="" asp-page="/Privacy" asp-all-route-data="@Context.Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString())">Privacy</a>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        function showUsernameInput() {
+            const username = prompt("Please enter your username:");
+            if (username) {
+                // Construct the new URL with the username as a query parameter
+                const currentUrl = window.location.href;
+                const separator = currentUrl.includes("?") ? "&" : "?";
+                const newUrl = `${currentUrl}${separator}username=${encodeURIComponent(username)}`;
+
+                // Redirect to the new URL
+                event.preventDefault();
+                window.location.href = newUrl;
+            }
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
