@@ -2,7 +2,7 @@
 
 "Quote of the Day" is a .NET 8 application built with ASP.NET Razor pages. It shows a random quote when loaded. A user can heart-vote on the quote. The application is to demonstrate the configuration, feature management, and experimentation capabilities of **Azure App Configuration**.
 
-![Screenshot of my app](images\screenshot.png)
+![Screenshot of my app](images/screenshot.png)
 
 ## Configuration
 The application loads quotes from App Configuration, so you can update the quote of the day without redeploying or restarting the application.
