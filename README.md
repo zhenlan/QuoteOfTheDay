@@ -29,6 +29,8 @@ After running the application, loging in with different users, and voting for so
 
 1. Create a feature flag named **Greeting** (key name: *.appconfig.featureflag/QuoteOfTheDay:Greeting*) with two variants, *On* and *Off*, add allocation rules as you like, and enable telemetry.
 
-## Simulation
+## Experimentation simulation
+
+While the application is running, open *ClientSimulator/ClientSimulator.html* in a browser. Choose desired heart-voting probability and hit the *Start Simulation* button to simulate client traffic. You can stop the simulation anytime. Once done, you can check out the telemetry in Application Insights and validate if they match with your simulation results.
 
 ![Screenshot of the simulation](images/simulation.png)

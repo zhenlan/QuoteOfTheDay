@@ -46,7 +46,7 @@
     <script type="text/javascript">
 
         var baseUrl = "https://localhost:7172/";
-        var MaxUsers = 10000;
+        var MaxUsers = 1000;
         var running = false;
 
         $(function () {
@@ -59,27 +59,54 @@
             });
         });
 
+        async function simulateButtonClick() {
+            // var button = $("#simulateButton");
+            // if (button.text() === "Start Simulation") {
+            if (!running) {
+                await startSimulation();
+            } else {
+                var confirmStop = confirm("Are you sure you want to stop the simulation?");
+                if (confirmStop) {
+                    running = false;
+                }
+            }
+        }
+
         async function startSimulation() {
             running = true;
+
+            // Initialize the UI for the simulation
+            var button = $("#simulateButton");
+            button.text("Stop Simulation");
+            button.css("background-color", "red");
+            var simulationStartTime = new Date().toLocaleString();
+            $("#simulationStartTime").text("(Started on " + simulationStartTime + ")");
+            $("#simulationEndTime").text("");
+            $('#progressArea').val("");
 
             // Generate a random user name prefix
             var userNamePrefix = "User" + getTimestamp() + "-";
 
+            // Get the heart-voting probability selected from the sliders
             var heartVotingProbability_UsersNotGreeted = parseInt($("#heartVotingProbability-UsersNotGreeted").val(), 10);
             var heartVotingProbability_UsersGreeted = parseInt($("#heartVotingProbability-UsersGreeted").val(), 10);
 
+            // Initialize the simulation results
             var totalUsersNotGreeted = 0;
             var totalUsersGreeted = 0;
             var heartVotedUsersNotGreeted = 0;
             var heartVotedUsersGreeted = 0;
 
+            // Start the simulation
             for (var i = 0; i < MaxUsers; i++) {
 
                 var userName = userNamePrefix + i;
                 var message = userName;
 
+                // Check if the user is greeted
                 var isGreeted = await checkGreetingContent(userName);
 
+                // Simulate the user voting behavior
                 var randomPercentage = Math.floor(Math.random() * 100);
                 if (isGreeted) {
                     totalUsersGreeted++;
@@ -106,6 +133,7 @@
                 progressArea.val(progressArea.val() + message + "\n");
                 progressArea.scrollTop(progressArea[0].scrollHeight);
 
+                // Update the simulation results
                 var totalUsers = totalUsersNotGreeted + totalUsersGreeted;
                 var heartVotedUsers = heartVotedUsersNotGreeted + heartVotedUsersGreeted;
 
@@ -120,10 +148,23 @@
                 $('#heartVotedUsersGreeted').text(heartVotedUsersGreeted);
                 $('#heartVotedUsersGreetedPercentage').text(Math.round(heartVotedUsersGreeted * 100 / totalUsersGreeted));
 
+                // Check if the simulation should stop
                 if (!running) {
                     break;
                 }
+
+                // Delay for 0.1 second before processing the next user
+                await new Promise(r => setTimeout(r, 100));
             }
+
+            running = false;
+
+            // Reset the UI after the simulation ends
+            button.text("Start Simulation");
+            button.css("background-color", "#007bff");
+            // Display the simulation end time
+            var simulationEndTime = new Date().toLocaleString();
+            $("#simulationEndTime").text("(Ended on " + simulationEndTime + ")");
         }
 
         function checkGreetingContent(userName) {
@@ -173,33 +214,6 @@
             var minute = ('0' + date.getMinutes()).slice(-2);
 
             return month + day + hour + minute;
-        }
-
-        async function simulateButtonClick() {
-            var button = $("#simulateButton");
-            if (button.text() === "Start Simulation") {
-                // Initialize the UI for the simulation
-                button.text("Stop Simulation");
-                button.css("background-color", "red");
-                var simulationStartTime = new Date().toLocaleString();
-                $("#simulationStartTime").text("(Started on " + simulationStartTime + ")");
-                $("#simulationEndTime").text("");
-                $('#progressArea').val("");
-
-
-                await startSimulation();
-
-            } else {
-                var confirmStop = confirm("Are you sure you want to stop the simulation?");
-                if (confirmStop) {
-                    running = false;
-                    button.text("Start Simulation");
-                    button.css("background-color", "#007bff");
-
-                    var simulationEndTime = new Date().toLocaleString();
-                    $("#simulationEndTime").text("(Ended on " + simulationEndTime + ")");
-                }
-            }
         }
     </script>
 
