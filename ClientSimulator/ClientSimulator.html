@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Client Simulator - Quote of the Day</title>
+
+    <link rel="stylesheet" href="./css/site.css" />
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        #simulateButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .experimentContainer {
+            margin-top: 20px;
+        }
+
+        .experimentContainer input[type="range"] {
+            width: 350px;
+        }
+
+        .simulationResults {
+            margin-top: 20px;
+        }
+
+        .simulationResults p {
+            margin: 5px 0;
+        }
+    </style>
+
+
+    <script src="./lib/jquery/dist/jquery.min.js"></script>
+    <script src="./js/site.js" asp-append-version="true"></script>
+
+    <script type="text/javascript">
+
+        var baseUrl = "https://localhost:7172/";
+        var MaxUsers = 10000;
+        var running = false;
+
+        $(function () {
+            // Display the heart-voting probability selected from the slider
+            $('#heartVotingProbability-UsersGreeted').on('input', function () {
+                $('#heartVotingProbabilityLabel-UsersGreeted').text(this.value);
+            });
+            $('#heartVotingProbability-UsersNotGreeted').on('input', function () {
+                $('#heartVotingProbabilityLabel-UsersNotGreeted').text(this.value);
+            });
+        });
+
+        async function startSimulation() {
+            running = true;
+
+            // Generate a random user name prefix
+            var userNamePrefix = "User" + getTimestamp() + "-";
+
+            var heartVotingProbability_UsersNotGreeted = parseInt($("#heartVotingProbability-UsersNotGreeted").val(), 10);
+            var heartVotingProbability_UsersGreeted = parseInt($("#heartVotingProbability-UsersGreeted").val(), 10);
+
+            var totalUsersNotGreeted = 0;
+            var totalUsersGreeted = 0;
+            var heartVotedUsersNotGreeted = 0;
+            var heartVotedUsersGreeted = 0;
+
+            for (var i = 0; i < MaxUsers; i++) {
+
+                var userName = userNamePrefix + i;
+                var message = userName;
+
+                var isGreeted = await checkGreetingContent(userName);
+
+                var randomPercentage = Math.floor(Math.random() * 100);
+                if (isGreeted) {
+                    totalUsersGreeted++;
+                    if (randomPercentage < heartVotingProbability_UsersGreeted) {
+                        heartVotedUsersGreeted++;
+                        voteHeart(userName);
+                        message += " is greeted and voted heart";
+                    } else {
+                        message += " is greeted but did not vote heart";
+                    }
+                } else {
+                    totalUsersNotGreeted++;
+                    if (randomPercentage < heartVotingProbability_UsersNotGreeted) {
+                        heartVotedUsersNotGreeted++;
+                        voteHeart(userName);
+                        message += " is not greeted and voted heart";
+                    } else {
+                        message += " is not greeted and did not vote heart";
+                    }
+                }
+
+                // Update the UI with the simulation progress
+                var progressArea = $('#progressArea');
+                progressArea.val(progressArea.val() + message + "\n");
+                progressArea.scrollTop(progressArea[0].scrollHeight);
+
+                var totalUsers = totalUsersNotGreeted + totalUsersGreeted;
+                var heartVotedUsers = heartVotedUsersNotGreeted + heartVotedUsersGreeted;
+
+                $('#totalUsers').text(totalUsers);
+                $('#totalUsersNotGreeted').text(totalUsersNotGreeted);
+                $('#totalUsersNotGreetedPercentage').text(Math.round(totalUsersNotGreeted * 100 / totalUsers));
+                $('#totalUsersGreeted').text(totalUsersGreeted);
+                $('#totalUsersGreetedPercentage').text(Math.round(totalUsersGreeted * 100 / totalUsers));
+                $('#heartVotedUsers').text(heartVotedUsers);
+                $('#heartVotedUsersNotGreeted').text(heartVotedUsersNotGreeted);
+                $('#heartVotedUsersNotGreetedPercentage').text(Math.round(heartVotedUsersNotGreeted * 100 / totalUsersNotGreeted));
+                $('#heartVotedUsersGreeted').text(heartVotedUsersGreeted);
+                $('#heartVotedUsersGreetedPercentage').text(Math.round(heartVotedUsersGreeted * 100 / totalUsersGreeted));
+
+                if (!running) {
+                    break;
+                }
+            }
+        }
+
+        function checkGreetingContent(userName) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: baseUrl + "?username=" + userName,
+                    type: 'GET',
+                    dataType: 'html',
+                    success: function (html) {
+                        const $doc = $(html);
+                        const $greetingElement = $doc.find('.greeting-content');
+                        if ($greetingElement.length > 0) {
+                            const content = $greetingElement.text();
+                            const isGreeted = content.includes(userName);
+                            resolve(isGreeted);
+                        } else {
+                            alert("Greeting content not found");
+                            reject("Greeting content not found");
+                        }
+                    },
+                    error: function (error) {
+                        alert('checkGreetingContent Error:', error);
+                        reject(error);
+                    },
+                    cache: false
+                });
+            });
+        }
+
+        function voteHeart(userName) {
+            $.ajax({
+                url: baseUrl + "Index?handler=HeartQuote&username=" + userName,
+                type: "POST",
+                success: function (response) {
+                },
+                error: function (error) {
+                    // alert('voteHeart Error:', error);
+                }
+            });
+        }
+
+        function getTimestamp() {
+            var date = new Date();
+            var month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are 0 based, so +1 and pad with 0's
+            var day = ('0' + date.getDate()).slice(-2);
+            var hour = ('0' + date.getHours()).slice(-2);
+            var minute = ('0' + date.getMinutes()).slice(-2);
+
+            return month + day + hour + minute;
+        }
+
+        async function simulateButtonClick() {
+            var button = $("#simulateButton");
+            if (button.text() === "Start Simulation") {
+                // Initialize the UI for the simulation
+                button.text("Stop Simulation");
+                button.css("background-color", "red");
+                var simulationStartTime = new Date().toLocaleString();
+                $("#simulationStartTime").text("(Started on " + simulationStartTime + ")");
+                $("#simulationEndTime").text("");
+                $('#progressArea').val("");
+
+
+                await startSimulation();
+
+            } else {
+                var confirmStop = confirm("Are you sure you want to stop the simulation?");
+                if (confirmStop) {
+                    running = false;
+                    button.text("Start Simulation");
+                    button.css("background-color", "#007bff");
+
+                    var simulationEndTime = new Date().toLocaleString();
+                    $("#simulationEndTime").text("(Ended on " + simulationEndTime + ")");
+                }
+            }
+        }
+    </script>
+
+</head>
+
+<body>
+    <h1>Quote of the Day</h1>
+
+    <h2>Experiment simulation</h2>
+    <div class="experimentContainer">
+        <table border="0">
+            <tr>
+                <td colspan="2">
+                    <b>Choose heart-voting probability:</b>
+                </td>
+            </tr>
+            <tr>
+                <td>Users not greeted: <b><label id="heartVotingProbabilityLabel-UsersNotGreeted">40</label>%</b></td>
+                <td>Users greeted: <b><label id="heartVotingProbabilityLabel-UsersGreeted">60</label>%</b></td>
+            </tr>
+            <tr>
+                <td><input type="range" id="heartVotingProbability-UsersNotGreeted" min="0" max="100" value="40" /></td>
+                <td><input type="range" id="heartVotingProbability-UsersGreeted" min="0" max="100" value="60" /></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <button id="simulateButton" class="simulateButton" onclick="simulateButtonClick()">Start Simulation</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <h2>Actual results</h2>
+    <div id="summary">
+        <table border="0">
+            <tr>
+                <td colspan="2"><b>Total Users:</b> <span id="totalUsers"></span></td>
+            </tr>
+            <tr>
+                <td>Users not greeted:<span id="totalUsersNotGreeted">0</span> (<span id="totalUsersNotGreetedPercentage">0</span>%)</td>
+                <td>Users greeted:<span id="totalUsersGreeted">0</span> (<span id="totalUsersGreetedPercentage">0</span>%)</td>
+            </tr>
+            <tr>
+                <td colspan="2"><b>Heart-voted Users:</b> <span id="heartVotedUsers"></span></td>
+            </tr>
+            <tr>
+                <td>Users not greeted:<span id="heartVotedUsersNotGreeted">0</span> (<span id="heartVotedUsersNotGreetedPercentage">0</span>%)</td>
+                <td>Users greeted:<span id="heartVotedUsersGreeted">0</span> (<span id="heartVotedUsersGreetedPercentage">0</span>%)</td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <textarea id="progressArea" rows="20" cols="90"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="simulationStartTime" style="font-style: italic; color: red;"></span>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <span id="simulationEndTime" style="font-style: italic; color: red;"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>
