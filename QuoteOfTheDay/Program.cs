@@ -17,14 +17,13 @@ builder.Configuration.AddAzureAppConfiguration(options =>
            .Select("QuoteOfTheDay:*")
            .ConfigureRefresh(refreshOptions =>
            {
-               refreshOptions.Register("QuoteOfTheDay:Quotes", refreshAll: true)
-                             .SetCacheExpiration(TimeSpan.FromSeconds(5));
+               refreshOptions.Register("QuoteOfTheDay:Quotes", refreshAll: true);
            })
            // Load all feature flags that have keys starting with "QuoteOfTheDay:" with no label.
            .UseFeatureFlags(featureFlagOptions =>
            {
                featureFlagOptions.Select("QuoteOfTheDay:*");
-               featureFlagOptions.CacheExpirationInterval = TimeSpan.FromSeconds(1);
+               featureFlagOptions.CacheExpirationInterval = TimeSpan.FromSeconds(5);
            });
 });
 
@@ -50,17 +49,17 @@ builder.Services.AddAzureAppConfiguration()
 // Bind configuration to the Settings object
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("QuoteOfTheDay"));
 
-// Allows cross-origin requests (CORS) from the client-side
+// Allows cross-origin requests (CORS) from the client-side. Used for the client simulation app.
 builder.Services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
-            });
+        {
+            options.AddDefaultPolicy(
+                builder =>
+                {
+                    builder.AllowAnyOrigin()
+                            .AllowAnyMethod()
+                            .AllowAnyHeader();
+                });
+        });
 
 var app = builder.Build();
 
@@ -75,7 +74,7 @@ if (!app.Environment.IsDevelopment())
 // Use Azure App Configuration middleware for dynamic configuration refresh.
 app.UseAzureAppConfiguration();
 
-// Add TargetingId to HttpContext for telemetry
+// Use middleware to cache TargetingId in HttpContext used for telemetry
 app.UseMiddleware<TargetingHttpContextMiddleware>();
 
 

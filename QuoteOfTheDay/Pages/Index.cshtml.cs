@@ -6,7 +6,8 @@ using Microsoft.FeatureManagement;
 
 namespace QuoteOfTheDay.Pages
 {
-    // The following attribute is not needed for this application to fully function. It's added to enable a client simulation app.
+    // The following attribute is not needed for this application to fully function.
+    // It's added to enable a client simulation app.
     [IgnoreAntiforgeryToken(Order = 1001)]
     public class IndexModel(IOptionsSnapshot<Settings> settings, IVariantFeatureManagerSnapshot featureManager, TelemetryClient telemetryClient) : PageModel
     {
@@ -25,19 +26,20 @@ namespace QuoteOfTheDay.Pages
             Variant variant = await _featureManager.GetVariantAsync("Greeting", HttpContext.RequestAborted);
             ShowGreeting = variant.Configuration.Get<bool>();
 
-            // Simpler way to check the binary variant feature flag by using the "status_override": "Disabled" in the Off variant
-            //ShowGreeting = await _featureManager.IsEnabledAsync("Greeting", default);
+            // Simpler way to check a binary variant feature flag by using the "status_override": "Disabled" in the Off variant.
+            //ShowGreeting = await _featureManager.IsEnabledAsync("Greeting", HttpContext.RequestAborted);
         }
 
-        public IActionResult OnPostHeartQuoteAsync()
+        // Handles the heart request
+        public IActionResult OnPostHeartAsync()
         {
             string? userId = User.Identity?.Name;
 
             if (!string.IsNullOrEmpty(userId))
             {
                 // Send telemetry to Application Insights
-                _telemetryClient.TrackEvent("HeartQuote");
-                _telemetryClient.TrackMetric("QuoteHearts", 1);
+                _telemetryClient.TrackEvent("Heart");
+                _telemetryClient.TrackMetric("Heart", 1);
 
                 return new JsonResult(new { success = true });
             }

@@ -12,7 +12,7 @@
             padding: 0;
         }
 
-        #simulateButton {
+        #simulationButton {
             padding: 10px 20px;
             font-size: 16px;
             background-color: #007bff;
@@ -27,15 +27,7 @@
         }
 
         .experimentContainer input[type="range"] {
-            width: 350px;
-        }
-
-        .simulationResults {
-            margin-top: 20px;
-        }
-
-        .simulationResults p {
-            margin: 5px 0;
+            width: 328px;
         }
     </style>
 
@@ -45,8 +37,11 @@
 
     <script type="text/javascript">
 
-        var baseUrl = "https://localhost:7172/";
-        var MaxUsers = 1000;
+        // Global variables
+        var BaseUrl = "https://localhost:7172/";
+        var MaxUsers = 2000
+        var DelayBetweenUsers = 500; // in milliseconds
+
         var running = false;
 
         $(function () {
@@ -59,9 +54,7 @@
             });
         });
 
-        async function simulateButtonClick() {
-            // var button = $("#simulateButton");
-            // if (button.text() === "Start Simulation") {
+        async function simulationButtonClick() {
             if (!running) {
                 await startSimulation();
             } else {
@@ -76,7 +69,7 @@
             running = true;
 
             // Initialize the UI for the simulation
-            var button = $("#simulateButton");
+            var button = $("#simulationButton");
             button.text("Stop Simulation");
             button.css("background-color", "red");
             var simulationStartTime = new Date().toLocaleString();
@@ -112,7 +105,7 @@
                     totalUsersGreeted++;
                     if (randomPercentage < heartVotingProbability_UsersGreeted) {
                         heartVotedUsersGreeted++;
-                        voteHeart(userName);
+                        await voteHeart(userName);
                         message += " is greeted and voted heart";
                     } else {
                         message += " is greeted but did not vote heart";
@@ -121,7 +114,7 @@
                     totalUsersNotGreeted++;
                     if (randomPercentage < heartVotingProbability_UsersNotGreeted) {
                         heartVotedUsersNotGreeted++;
-                        voteHeart(userName);
+                        await voteHeart(userName);
                         message += " is not greeted and voted heart";
                     } else {
                         message += " is not greeted and did not vote heart";
@@ -153,8 +146,8 @@
                     break;
                 }
 
-                // Delay for 0.1 second before processing the next user
-                await new Promise(r => setTimeout(r, 100));
+                // Delay before processing the next user
+                await new Promise(r => setTimeout(r, DelayBetweenUsers));
             }
 
             running = false;
@@ -170,7 +163,7 @@
         function checkGreetingContent(userName) {
             return new Promise((resolve, reject) => {
                 $.ajax({
-                    url: baseUrl + "?username=" + userName,
+                    url: BaseUrl + "?username=" + userName,
                     type: 'GET',
                     dataType: 'html',
                     success: function (html) {
@@ -195,25 +188,28 @@
         }
 
         function voteHeart(userName) {
-            $.ajax({
-                url: baseUrl + "Index?handler=HeartQuote&username=" + userName,
-                type: "POST",
-                success: function (response) {
-                },
-                error: function (error) {
-                    // alert('voteHeart Error:', error);
-                }
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: BaseUrl + "Index?handler=Heart&username=" + userName,
+                    type: "POST",
+                    success: function (response) {
+                        resolve(response);
+                    },
+                    error: function (error) {
+                        alert(userName + ' failed to vote heart:', error);
+                        reject(error);
+                    }
+                });
             });
         }
 
         function getTimestamp() {
             var date = new Date();
-            var month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are 0 based, so +1 and pad with 0's
             var day = ('0' + date.getDate()).slice(-2);
             var hour = ('0' + date.getHours()).slice(-2);
             var minute = ('0' + date.getMinutes()).slice(-2);
 
-            return month + day + hour + minute;
+            return day + hour + minute;
         }
     </script>
 
@@ -240,7 +236,7 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <button id="simulateButton" class="simulateButton" onclick="simulateButtonClick()">Start Simulation</button>
+                    <button id="simulationButton" class="simulationButton" onclick="simulationButtonClick()">Start Simulation</button>
                 </td>
             </tr>
         </table>
@@ -270,12 +266,12 @@
             </tr>
             <tr>
                 <td colspan="2">
-                    <span id="simulationStartTime" style="font-style: italic; color: red;"></span>
+                    <span id="simulationStartTime" style="font-style: italic; color: red;"></span><br />
+                    <span id="simulationEndTime" style="font-style: italic; color: red;"></span>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">
-                    <span id="simulationEndTime" style="font-style: italic; color: red;"></span>
                 </td>
             </tr>
         </table>

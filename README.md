@@ -4,16 +4,18 @@
 
 ![Screenshot of the application](images/screenshot.png)
 
-## Configuration
+## Introduction
+
+### Configuration
 The application loads quotes from App Configuration, so you can update the quote of the day without redeploying or restarting the application.
 
-## Feature management & experimentation
-Instead of the standard title, the application displays a greeting message for certain users based on the targeting rules of a feature flag. The experimentation (aka. A/B testing) is conducted to understand if a greeting message can encourage more heart-voting from users.
+### Feature management & experimentation
+Instead of the standard title, the application displays a greeting message for certain users based on the targeting rules of a feature flag. The experimentation (aka. A/B testing) is conducted to measure if a personalized greeting message can encourage more user engagement (voting heart).
 
-## Telemetry
-After running the application, loging in with different users, and voting for some quotes, You should find *FeatureEvaluation* and *HeartQuote* events as customEvents under the *Logs* balde in your Application Insights.
+### Telemetry
+After running the application, loging in with different users, and voting for some quotes, You should find *FeatureEvaluation* and *Heart* events as customEvents under the *Logs* balde in your Application Insights.
 
-## How to setup
+### How to setup
 1. Provision an App Configuration store and an Application Insights instance. Create following environment variables before you run the application.
 
     ```bash
@@ -31,6 +33,54 @@ After running the application, loging in with different users, and voting for so
 
 ## Experimentation simulation
 
+### Run simulation
 While the application is running, open *ClientSimulator/ClientSimulator.html* in a browser. Choose desired heart-voting probability and hit the *Start Simulation* button to simulate client traffic. You can stop the simulation anytime. Once done, you can check out the telemetry in Application Insights and validate if they match with your simulation results.
 
 ![Screenshot of the simulation](images/simulation.png)
+
+### Review telemetry in Application Insights
+
+Here is an example query you can use to get statistical analysis in Application Insights. 
+
+Replace the `userNamePrefix` with the actual value from your simulation output.
+
+```kusto
+let userNamePrefix = "UserDDHHMM-";
+
+// Total users
+let total_users =
+    customEvents
+    | where name == "FeatureEvaluation"
+    | where customDimensions.TargetingId startswith userNamePrefix
+    | summarize TotalUsers = count() by Variant = tostring(customDimensions.Variant);
+
+// Hearted users
+let hearted_users =
+    customEvents
+    | where name == "FeatureEvaluation"
+    | where customDimensions.TargetingId startswith userNamePrefix
+    | extend TargetingId = tostring(customDimensions.TargetingId)
+    | join kind=inner (
+        customEvents
+        | where name == "Heart"
+        | extend TargetingId = tostring(customDimensions.TargetingId)
+    ) on TargetingId
+    | summarize HeartedUsers = count() by Variant = tostring(customDimensions.Variant);
+
+// Calculate the percentage of hearted users over total users
+let combined_data =
+    total_users
+    | join kind=leftouter (hearted_users) on Variant
+    | extend HeartedUsers = coalesce(HeartedUsers, 0)
+    | extend PercentageHearted = strcat(round(HeartedUsers * 100.0 / TotalUsers, 1), "%")
+    | project Variant, TotalUsers, HeartedUsers, PercentageHearted;
+
+// Calculate the sum of total users and hearted users of all variants
+let total_sum =
+    combined_data
+    | summarize Variant="All", TotalUsers = sum(TotalUsers), HeartedUsers = sum(HeartedUsers);
+
+// Display the combined data along with the sum of total users and hearted users
+combined_data
+| union (total_sum)
+```

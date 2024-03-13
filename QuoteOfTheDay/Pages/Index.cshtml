@@ -84,12 +84,12 @@
             <h3 class="greeting-content">Quote of the day</h3>
         }
         <br />
-        <p class="quote">@Model.Quote.Quote</p>
-        <p>- <b>@Model.Quote.Author</b></p>
+        <p class="quote">@Model.Quote?.Quote</p>
+        <p>- <b>@Model.Quote?.Author</b></p>
     </div>
 
     <div class="vote-container">
-        <button class="btn btn-primary" onclick="heartClicked(this)">
+        <button class="btn btn-primary" onclick="heartClick(this)">
             <i class="far fa-heart"></i> <!-- Heart icon -->
         </button>
     </div>
@@ -100,23 +100,24 @@
 </div>
 
 <script>
-    function heartClicked(button) {
+    function heartClick(button) {
         var icon = button.querySelector('i');
-        icon.classList.toggle('far');
-        icon.classList.toggle('fas');
+        icon.classList.toggle('far');  // regular heart
+        icon.classList.toggle('fas');  // solid heart
 
         // If the quote is hearted
         if (icon.classList.contains('fas')) {
             // Send a request to the server to save the vote
-            fetch('/Index?handler=HeartQuote&username=@User.Identity.Name', {
+            fetch('/Index?handler=Heart&username=@User.Identity.Name', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    //'Content-Type': 'application/json',
+                    // Needed for anti-forgery
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: JSON.stringify({
-                    userId: '@User.Identity.Name'
-                })
+                }
+                // body: JSON.stringify({
+                //     userId: '@User.Identity.Name'
+                // })
             });
         }
     }
