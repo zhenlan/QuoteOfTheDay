@@ -84,3 +84,7 @@ let total_sum =
 combined_data
 | union (total_sum)
 ```
+
+The result looks like this in Application Insights.
+
+![Screenshot of the Application Insights](images/appinsights.png)
