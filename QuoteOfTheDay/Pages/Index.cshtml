@@ -111,13 +111,9 @@
             fetch('/Index?handler=Heart&username=@User.Identity.Name', {
                 method: 'POST',
                 headers: {
-                    //'Content-Type': 'application/json',
                     // Needed for anti-forgery
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
-                // body: JSON.stringify({
-                //     userId: '@User.Identity.Name'
-                // })
             });
         }
     }

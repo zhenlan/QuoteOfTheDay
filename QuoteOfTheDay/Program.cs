@@ -5,6 +5,7 @@ using QuoteOfTheDay.Authentication;
 using Microsoft.FeatureManagement.Telemetry.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.FeatureManagement.Telemetry.ApplicationInsights.AspNetCore;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,8 +28,8 @@ builder.Configuration.AddAzureAppConfiguration(options =>
            });
 });
 
-// Add Application Insights telemetry.
-builder.Services.AddApplicationInsightsTelemetry()
+// Add Application Insights telemetry with adaptive sampling disabled.
+builder.Services.AddApplicationInsightsTelemetry( new ApplicationInsightsServiceOptions() { EnableAdaptiveSampling = false})
                 .AddSingleton<ITelemetryInitializer, TargetingTelemetryInitializer>();
 
 // Add services to the container.

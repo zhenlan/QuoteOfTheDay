@@ -39,8 +39,8 @@
 
         // Global variables
         var BaseUrl = "https://localhost:7172/";
-        var MaxUsers = 2000
-        var DelayBetweenUsers = 500; // in milliseconds
+        var MaxUsers = 5000
+        var DelayBetweenUsers = 100; // in milliseconds
 
         var running = false;
 
@@ -146,8 +146,8 @@
                     break;
                 }
 
-                // Delay before processing the next user
-                await new Promise(r => setTimeout(r, DelayBetweenUsers));
+                // Delay before processing the next user (with 50% jitter)
+                await new Promise(r => setTimeout(r, DelayBetweenUsers * (Math.random() + 0.5)));
             }
 
             running = false;

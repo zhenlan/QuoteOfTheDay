@@ -39,7 +39,6 @@ namespace QuoteOfTheDay.Pages
             {
                 // Send telemetry to Application Insights
                 _telemetryClient.TrackEvent("Heart");
-                _telemetryClient.TrackMetric("Heart", 1);
 
                 return new JsonResult(new { success = true });
             }

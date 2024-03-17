@@ -87,4 +87,40 @@ combined_data
 
 The result looks like this in Application Insights.
 
-![Screenshot of the Application Insights](images/appinsights.png)
+![Screenshot of the Application Insights](images/appinsights-table.png)
+
+You can also view the time chart of your data with the following sample query.
+
+```kusto
+let userNamePrefix = "UserDDHHMM-";
+let roundTimeSpan = 1m;
+
+// Total users
+let total_users =
+    customEvents
+    | where name == "FeatureEvaluation"
+    | where customDimensions.TargetingId startswith userNamePrefix
+    | extend Variant = strcat("All Users: ", tostring(customDimensions.Variant))
+    | summarize Count = count() by bin(timestamp, roundTimeSpan), Variant;
+
+// Hearted users
+let hearted_users =
+    customEvents
+    | where name == "FeatureEvaluation"
+    | where customDimensions.TargetingId startswith userNamePrefix
+    | extend TargetingId = tostring(customDimensions.TargetingId)
+    | join kind=leftanti (
+        customEvents
+        | where name == "Heart"
+        | extend TargetingId = tostring(customDimensions.TargetingId)
+    ) on TargetingId
+    | extend Variant = strcat("Hearted Users: ", tostring(customDimensions.Variant))
+    | summarize Count = count() by bin(timestamp, roundTimeSpan), Variant;
+
+// Combine total users and hearted users data
+total_users
+| union hearted_users
+| render timechart
+```
+
+![Screenshot of the Application Insights](images/appinsights-chart.png)
