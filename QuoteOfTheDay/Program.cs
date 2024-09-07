@@ -1,11 +1,10 @@
 using Azure.Identity;
+using Microsoft.ApplicationInsights.AspNetCore.Extensions;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.FeatureManagement;
+using Microsoft.FeatureManagement.Telemetry.ApplicationInsights;
 using QuoteOfTheDay;
 using QuoteOfTheDay.Authentication;
-using Microsoft.FeatureManagement.Telemetry.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.FeatureManagement.Telemetry.ApplicationInsights.AspNetCore;
-using Microsoft.ApplicationInsights.AspNetCore.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +23,7 @@ builder.Configuration.AddAzureAppConfiguration(options =>
            .UseFeatureFlags(featureFlagOptions =>
            {
                featureFlagOptions.Select("QuoteOfTheDay:*");
-               featureFlagOptions.CacheExpirationInterval = TimeSpan.FromSeconds(5);
+               featureFlagOptions.SetRefreshInterval(TimeSpan.FromSeconds(5));
            });
 });
 
@@ -45,7 +44,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAzureAppConfiguration()
                 .AddFeatureManagement()
                 .WithTargeting<MyUserContextAccessor>()
-                .AddTelemetryPublisher<ApplicationInsightsTelemetryPublisher>();
+                .AddApplicationInsightsTelemetryPublisher();
 
 // Bind configuration to the Settings object
 builder.Services.Configure<Settings>(builder.Configuration.GetSection("QuoteOfTheDay"));

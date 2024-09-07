@@ -2,7 +2,7 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
-    ViewData["Username"] = User.Identity.Name;
+    ViewData["Username"] = User?.Identity?.Name;
 }
 
 <style>
@@ -77,7 +77,7 @@
     <div class="quote-content">
         @if (Model.ShowGreeting)
         {
-            <h3 class="greeting-content">Hi <b>@User.Identity.Name</b>, hope this makes your day!</h3>
+            <h3 class="greeting-content">Hi <b>@User?.Identity?.Name</b>, hope this makes your day!</h3>
         }
         else
         {
@@ -108,7 +108,7 @@
         // If the quote is hearted
         if (icon.classList.contains('fas')) {
             // Send a request to the server to save the vote
-            fetch('/Index?handler=Heart&username=@User.Identity.Name', {
+            fetch('/Index?handler=Heart&username=@User?.Identity?.Name', {
                 method: 'POST',
                 headers: {
                     // Needed for anti-forgery
