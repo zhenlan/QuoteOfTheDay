@@ -43,7 +43,7 @@ builder.Services.AddHttpContextAccessor();
 // Add Azure App Configuration and feature management services to the container.
 builder.Services.AddAzureAppConfiguration()
                 .AddFeatureManagement()
-                .WithTargeting<MyUserContextAccessor>()
+                .WithTargeting()
                 .AddApplicationInsightsTelemetryPublisher();
 
 // Bind configuration to the Settings object
